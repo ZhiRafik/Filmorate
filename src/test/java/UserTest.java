@@ -1,13 +1,17 @@
 import org.junit.jupiter.api.Test;
+import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 import java.time.LocalDate;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class UserTest {
 
+    UserController userController = new UserController();
+
     @Test
-    void shouldThrowExceptionWhenEmailIsInvalid() {
+    void shouldThrowExceptionWhenEmailDoesNotContainAt() {
         User user = new User();
         user.setEmail("invalidEmail");
         user.setLogin("validLogin");
@@ -15,7 +19,22 @@ class UserTest {
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
         ValidationException exception = assertThrows(ValidationException.class, () -> {
-            validateUser(user);
+            userController.addUser(user);
+        });
+
+        assertEquals("Email can not be blank and must contain @", exception.getMessage());
+    }
+
+    @Test
+    void shouldThrowExceptionWhenEmailContainsAtButIsInvalid() {
+        User user = new User();
+        user.setEmail("invalid-Email@");
+        user.setLogin("validLogin");
+        user.setName("Valid Name");
+        user.setBirthday(LocalDate.of(2000, 1, 1));
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> {
+            userController.addUser(user);
         });
 
         assertEquals("Email can not be blank and must contain @", exception.getMessage());
@@ -30,7 +49,7 @@ class UserTest {
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
         ValidationException exception = assertThrows(ValidationException.class, () -> {
-            validateUser(user);
+            userController.addUser(user);
         });
 
         assertEquals("Login can not be blank and contain whitespaces", exception.getMessage());
@@ -45,7 +64,7 @@ class UserTest {
         user.setBirthday(LocalDate.now().plusDays(1));
 
         ValidationException exception = assertThrows(ValidationException.class, () -> {
-            validateUser(user);
+            userController.addUser(user);
         });
 
         assertEquals("Birthday can not be in the future", exception.getMessage());
@@ -59,21 +78,6 @@ class UserTest {
         user.setName("John");
         user.setBirthday(LocalDate.of(2000, 1, 1));
 
-        assertDoesNotThrow(() -> validateUser(user));
-    }
-
-    private void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isBlank() || !(user.getEmail().contains("@"))) {
-            throw new ValidationException("Email can not be blank and must contain @");
-        }
-        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
-            throw new ValidationException("Login can not be blank and contain whitespaces");
-        }
-        if (user.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidationException("Birthday can not be in the future");
-        }
-        if (user.getName() == null || user.getName().isBlank()) {
-            user.setName(user.getLogin());
-        }
+        assertDoesNotThrow(() -> userController.addUser(user));
     }
 }

@@ -1,20 +1,19 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import jakarta.validation.constraints.NotNull;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
 import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDate;
-import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
-
     private final Map<Long, User> users = new HashMap<>();
 
     @PostMapping
@@ -44,13 +43,13 @@ public class UserController {
         return userBefore;
     }
 
-    private User getValidatedUser(User user) {
+    private static User getValidatedUser(User user) {
         log.debug("Выполняется валидация пользователя: {}", user);
-        if (user.getEmail().isBlank() || user.getEmail() == null || !(user.getEmail().contains("@"))) {
+        if (!isValidEmail(user.getEmail())) {
             log.error("Ошибка валидации: некорректный email");
             throw new ValidationException("Email can not be blank and must contain @");
         }
-        if (user.getLogin().isBlank() || user.getLogin() == null || user.getLogin().contains(" ")) {
+        if (user.getLogin() == null || user.getLogin().isBlank() || user.getLogin().contains(" ")) {
             log.error("Ошибка валидации: некорректный логин");
             throw new ValidationException("Login can not be blank and contain whitespaces");
         }
@@ -58,12 +57,17 @@ public class UserController {
             log.error("Ошибка валидации: день рождения в будущем");
             throw new ValidationException("Birthday can not be in the future");
         }
-        if (user.getName().isBlank() || user.getName() == null) {
+        if (user.getName() == null || user.getName().isBlank()) {
             log.warn("Имя пользователя пустое, используется логин вместо имени");
             user.setName(user.getLogin());
         }
         log.debug("Пользователь успешно прошёл валидацию: {}", user);
         return user;
+    }
+
+    private static boolean isValidEmail(String email) {
+        String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
+        return email != null && !email.isBlank() && Pattern.matches(emailRegex, email);
     }
 
     private long getNextId() {
