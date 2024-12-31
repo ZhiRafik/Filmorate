@@ -54,6 +54,11 @@ public class UserService {
         return friends;
     }
 
+    public Collection<User> getAll() {
+        log.info("Получен запрос на получение списка всех пользователей");
+        return userStorage.getAll();
+    }
+
     public Collection<User> getCommonFriends(User user1, User user2) {
         log.info("Получен запрос на получение общих друзей: user1={}, user2={}", user1, user2);
         checkIfUsersExist(user1, user2);

@@ -8,6 +8,7 @@ import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.time.LocalDate;
@@ -51,6 +52,11 @@ public class InMemoryUserStorage implements UserStorage {
             throw new NotFoundException("Пользователь с таким ID не найден");
         }
         return users.get(userId);
+    }
+
+    @Override
+    public Collection<User> getAll() {
+        return users.values();
     }
 
     @Override

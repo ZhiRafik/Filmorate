@@ -54,6 +54,12 @@ public class UserController {
         return userService.removeFriend(user, friend);
     }
 
+    @GetMapping
+    public Collection<User> getAll() {
+        log.info("Получен запрос на получения списка всех пользователей");
+        return userService.getAll();
+    }
+
     @GetMapping("/{userId}/friends")
     public Collection<User> getFriends(@PathVariable Long userId) {
         log.info("Получен запрос на получение списка друзей пользователя: userId={}", userId);
