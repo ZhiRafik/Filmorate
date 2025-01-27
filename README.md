@@ -1,4 +1,4 @@
-![ER-diagram in the project Filmorate](https://github.com/ZhiRafik/Filmorate/blob/main/ER-Filmorate.png?raw=true)
+![ER-diagram in the project Filmorate](https://github.com/ZhiRafik/Filmorate/blob/main/ER_Filmorate.png?raw=true)
 
 ER-diagram:
 - Thick arrow indicates one-to-one relationship, whereas the thin one means one-to-many. 
