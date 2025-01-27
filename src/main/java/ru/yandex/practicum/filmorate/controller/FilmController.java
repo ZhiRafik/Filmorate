@@ -1,8 +1,10 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -17,7 +19,9 @@ import java.util.Collection;
 @RequestMapping("/films")
 public class FilmController {
     private final FilmService filmService;
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
 
     @Autowired
@@ -49,7 +53,10 @@ public class FilmController {
     public Film likeFilm(@PathVariable Long filmId, @PathVariable Long userId) {
         log.info("Получен запрос на добавление лайка: filmId={}, userId={}", userId, filmId);
         User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
+        Film film = filmStorage.getFilm(filmId).orElse(null);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
         return filmService.likeFilm(user, film);
     }
 
@@ -57,7 +64,10 @@ public class FilmController {
     public Film removeLikeFromFilm(@PathVariable Long filmId, @PathVariable Long userId) {
         log.info("Получен запрос на удаление лайка: filmId={}, userId={}", userId, filmId);
         User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId);
+        Film film = filmStorage.getFilm(filmId).orElse(null);
+        if (film == null) {
+            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        }
         return filmService.removeLikeFromFilm(user, film);
     }
 

@@ -1,57 +1,59 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestBody;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
-import java.util.*;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
-@Component
-public abstract class InMemoryFilmStorage implements FilmStorage {
-    private final Map<Long, Film> films = new HashMap<>();
+@Component("filmDbStorage")
+@RequiredArgsConstructor
+public class FilmDbStorage implements FilmStorage {
+
+    JdbcTemplate jdbc = new JdbcTemplate();
+    RowMapper<Film> mapper = new FilmRowMapper();
+    FilmRepository filmRepository = new FilmRepository(jdbc, mapper);
 
     @Override
     public Film addFilm(@Valid @RequestBody Film film) {
         log.info("Получен запрос на добавление фильма: {}", film);
         film = getValidatedFilm(film);
-        film.setId(getNextId());
-        films.put(film.getId(), film);
-        log.info("Фильм добавлен с ID={}. Текущее количество фильмов: {}", film.getId(), films.size());
+        film = filmRepository.addFilm(film);
+        log.info("Фильм добавлен с ID={}.", film.getId());
         return film;
     }
 
     @Override
     public Collection<Film> getAll() {
-        log.info("Получен запрос на получение всех фильмов. Всего фильмов: {}", films.size());
-        return films.values();
+        log.info("Получен запрос на получение всех фильмов.");
+        return filmRepository.findAll();
     }
 
     @Override
     public Film updateFilm(@Valid @RequestBody Film film) {
         log.info("Получен запрос на обновление фильма с ID: {}", film.getId());
-        if (!films.containsKey(film.getId())) {
-            log.error("Фильм с ID={} не найден", film.getId());
-            throw new ValidationException("Фильм с указанным ID не найден");
-        }
         film = getValidatedFilm(film);
-        Film filmBefore = films.get(film.getId());
-        filmBefore.setDescription(film.getDescription());
-        filmBefore.setName(film.getName());
-        filmBefore.setDuration(film.getDuration());
-        filmBefore.setReleaseDate(film.getReleaseDate());
+        film = filmRepository.update(film);
         log.info("Фильм с ID={} успешно обновлён", film.getId());
-        return filmBefore;
+        return film;
     }
 
     @Override
     public boolean containsFilm(Film film) {
-        if (films.containsValue(film)) {
+        if (filmRepository.findById(film.getId()).isPresent()) {
             return true;
         }
         return false;
@@ -59,11 +61,30 @@ public abstract class InMemoryFilmStorage implements FilmStorage {
 
     @Override
     public Optional<Film> getFilm(Long filmId) {
-        Film film = films.get(filmId);
-        if (film == null) {
-            throw new NotFoundException("Фильм с id " + filmId + " не найден");
+        if (filmRepository.findById(filmId).isPresent()) {
+            return filmRepository.findById(filmId);
         }
-        return Optional.of(film);
+        throw new NotFoundException("Фильм с таким id не найден");
+    }
+
+    @Override
+    public boolean addLike(Long userId, Long filmId) {
+        return filmRepository.addLike(userId, filmId);
+    }
+
+    @Override
+    public boolean checkLike(Long userId, Long filmId) {
+        return filmRepository.checkLike(userId, filmId);
+    }
+
+    @Override
+    public boolean removeLike(Long userId, Long filmId) {
+        return filmRepository.removeLike(userId, filmId);
+    }
+
+    @Override
+    public List<Film> getMostPopularFilms(int n) {
+        return filmRepository.getMostPopularFilms(n);
     }
 
     private Film getValidatedFilm(Film film) {
@@ -87,22 +108,4 @@ public abstract class InMemoryFilmStorage implements FilmStorage {
         log.debug("Фильм успешно прошёл валидацию: {}", film);
         return film;
     }
-
-    private long getNextId() {
-        long currentMaxId = films.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        log.debug("Сгенерирован новый ID для фильма: {}", currentMaxId++);
-        return currentMaxId++;
-    }
-
-    public boolean addLike(Long userId, Long filmId) {
-        return false;
-    }
-
-    public boolean removeLike(Long userId, Long filmId){ return false; }
-
-    public boolean checkLike(Long userId, Long filmId){ return false; }
 }

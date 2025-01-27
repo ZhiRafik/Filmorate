@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.service.UserService;
@@ -16,7 +17,9 @@ import java.util.Map;
 @RequestMapping("/users")
 public class UserController {
     private final UserService userService;
+    @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;
+    @Qualifier("userDbStorage")
     private final UserStorage userStorage;
 
     @Autowired
@@ -39,7 +42,7 @@ public class UserController {
     }
 
     @PostMapping("/{userId}/friends/{friendId}")
-    public Map<User, User> addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+    public boolean addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         log.info("Получен запрос на добавление друга: userId={}, friendId={}", userId, friendId);
         User user = userStorage.getUser(userId);
         User friend = userStorage.getUser(friendId);
@@ -47,7 +50,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}/friends/{friendId}")
-    public Map<User, User> removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
+    public boolean removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
         log.info("Получен запрос на удаление друга: userId={}, friendId={}", userId, friendId);
         User user = userStorage.getUser(userId);
         User friend = userStorage.getUser(friendId);
