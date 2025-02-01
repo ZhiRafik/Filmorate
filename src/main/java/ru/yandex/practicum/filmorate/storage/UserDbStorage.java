@@ -3,22 +3,20 @@ package ru.yandex.practicum.filmorate.storage;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.dal.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.UserRepository;
-import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.dal.mappers.UserRowMapper;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
-import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -26,9 +24,10 @@ import java.util.regex.Pattern;
 @RequiredArgsConstructor
 public class UserDbStorage implements UserStorage {
 
-    JdbcTemplate jdbc = new JdbcTemplate();
-    RowMapper<User> mapper = new UserRowMapper();
-    UserRepository userRepository = new UserRepository(jdbc, mapper);
+    private final JdbcTemplate jdbc;
+    @Qualifier("userRowMapper")
+    private final RowMapper<User> mapper;
+    private final UserRepository userRepository;
 
     @Override
     public User addUser(@Valid @RequestBody User user) {

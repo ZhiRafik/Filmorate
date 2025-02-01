@@ -5,6 +5,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import ru.yandex.practicum.Main;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.UserDbStorage;
 
@@ -14,9 +17,10 @@ import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
-@AutoConfigureTestDatabase
+@AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
+@ContextConfiguration(classes = Main.class)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({UserDbStorage.class})
+@Import({UserDbStorage.class, Film.class, User.class})
 class DbUserTests {
     private final UserDbStorage userStorage;
     private User user1 = new User();

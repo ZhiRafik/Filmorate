@@ -1,11 +1,14 @@
 import lombok.RequiredArgsConstructor;
-import net.sf.saxon.trans.SymbolicName;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.jdbc.JdbcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.test.context.ContextConfiguration;
+import ru.yandex.practicum.Main;
+import ru.yandex.practicum.filmorate.dal.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.mappers.FilmRowMapper;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmDbStorage;
 import ru.yandex.practicum.filmorate.storage.UserDbStorage;
@@ -18,10 +21,13 @@ import java.util.ArrayList;
 import static org.junit.jupiter.api.Assertions.*;
 
 @JdbcTest
-@AutoConfigureTestDatabase
+@AutoConfigureTestDatabase(replace= AutoConfigureTestDatabase.Replace.NONE)
+@ContextConfiguration(classes = Main.class)
 @RequiredArgsConstructor(onConstructor_ = @Autowired)
-@Import({FilmDbStorage.class, UserDbStorage.class})
+@Import({FilmDbStorage.class, UserDbStorage.class, Film.class, User.class,
+        FilmRepository.class, FilmRowMapper.class})
 class DbFilmTests {
+
     private final FilmDbStorage filmStorage;
     private final UserDbStorage userStorage;
     private Film film1;

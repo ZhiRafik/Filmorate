@@ -9,7 +9,7 @@ import java.sql.SQLException;
 import java.sql.Timestamp;
 import java.time.Duration;
 
-@Component
+@Component("filmRowMapper")
 public class FilmRowMapper implements RowMapper<Film> {
     @Override
     public Film mapRow(ResultSet resultSet, int rowNum) throws SQLException {
