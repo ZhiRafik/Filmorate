@@ -1,5 +1,6 @@
 package ru.yandex.practicum.filmorate.storage;
 
+import ru.yandex.practicum.filmorate.enums.Genre;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
@@ -25,4 +26,8 @@ public interface FilmStorage {
     Optional<Film> getFilm(Long filmId);
 
     List<Film> getMostPopularFilms(int n);
+
+    Collection<Genre> getGenres();
+
+    Optional<Genre> getGenre(int id);
 }

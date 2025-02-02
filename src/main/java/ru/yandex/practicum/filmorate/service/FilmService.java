@@ -4,6 +4,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
+import ru.yandex.practicum.filmorate.enums.Genre;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -12,6 +13,7 @@ import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
 import java.util.ArrayList;
+import java.util.Optional;
 
 @Slf4j
 @Service
@@ -65,5 +67,15 @@ public class FilmService {
             throw new NotFoundException("Указанный пользователь не найден: " + user.toString());
         }
         log.debug("Проверка завершена: фильм и пользователь существуют");
+    }
+
+    public Collection<Genre> getGenres() {
+        log.info("Получен запрос на получение всех жанров");
+        return filmStorage.getGenres();
+    }
+
+    public Optional<Genre> getGenre(int id) {
+        log.info("Получен запрос на жанра по id");
+        return filmStorage.getGenre(id);
     }
 }

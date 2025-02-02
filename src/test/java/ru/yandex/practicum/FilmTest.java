@@ -2,6 +2,7 @@ package ru.yandex.practicum;
 
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
+import ru.yandex.practicum.filmorate.enums.Genre;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -12,6 +13,7 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -21,6 +23,16 @@ class FilmTest {
     private final FilmStorage filmStorage = new InMemoryFilmStorage() {
         @Override
         public List<Film> getMostPopularFilms(int n) {
+            return null;
+        }
+
+        @Override
+        public Collection<Genre> getGenres() {
+            return null;
+        }
+
+        @Override
+        public Optional<Genre> getGenre(int id) {
             return null;
         }
     };

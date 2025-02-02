@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
+import ru.yandex.practicum.filmorate.enums.Genre;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -76,6 +77,18 @@ public class FilmController {
     public Collection<Film> getMostPopularFilms(@PathVariable(required = false) int count) {
         log.info("Получен запрос на получение популярных фильмов. Количество: {}", count);
         return filmService.getPopularFilms(count);
+    }
+
+    @GetMapping("/genres")
+    public Collection<Genre> getGenres() {
+        log.info("Получен запрос на получение списка жанров");
+        return filmService.getGenres();
+    }
+
+    @GetMapping("/genres/{id}")
+    public Genre getGenre(@PathVariable int id) {
+        log.info("Получен запрос на получение жанра");
+        return filmService.getGenre(id).orElse(null);
     }
 
 }

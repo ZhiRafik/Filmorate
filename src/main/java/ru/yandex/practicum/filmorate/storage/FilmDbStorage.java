@@ -9,6 +9,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.dal.FilmRepository;
+import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.enums.Genre;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -27,6 +29,7 @@ public class FilmDbStorage implements FilmStorage {
     @Qualifier("filmRowMapper")
     private final RowMapper<Film> mapper;
     private final FilmRepository filmRepository;
+    private final GenreRepository genreRepository;
 
     @Override
     public Film addFilm(@Valid @RequestBody Film film) {
@@ -108,5 +111,15 @@ public class FilmDbStorage implements FilmStorage {
         }
         log.debug("Фильм успешно прошёл валидацию: {}", film);
         return film;
+    }
+
+    @Override
+    public Collection<Genre> getGenres() {
+        return genreRepository.getGenres();
+    }
+
+    @Override
+    public Optional<Genre> getGenre(int id) {
+        return genreRepository.getGenre(id);
     }
 }
