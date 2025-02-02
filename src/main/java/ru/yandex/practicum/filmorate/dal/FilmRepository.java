@@ -67,8 +67,8 @@ public class FilmRepository extends BaseRepository<Film> {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getGenre_id(),
-                film.getMpa_id()
+                film.getGenreId(),
+                film.getMpaId()
         );
         return film;
     }
@@ -80,8 +80,8 @@ public class FilmRepository extends BaseRepository<Film> {
                 film.getDescription(),
                 film.getReleaseDate(),
                 film.getDuration(),
-                film.getGenre_id(),
-                film.getMpa_id()
+                film.getGenreId(),
+                film.getMpaId()
         );
         film.setId(id);
         return film;
