@@ -61,7 +61,7 @@ public class FilmRepository extends BaseRepository<Film> {
     }
 
     public Film update(Film film) {
-        update (UPDATE_QUERY,
+        update(UPDATE_QUERY,
                 film.getName(),
                 film.getDescription(),
                 film.getReleaseDate(),
