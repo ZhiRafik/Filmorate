@@ -1,8 +1,6 @@
 package ru.yandex.practicum.filmorate.model;
 
 import lombok.Data;
-import ru.yandex.practicum.filmorate.enums.Genre;
-import ru.yandex.practicum.filmorate.enums.MPA;
 
 import java.time.Duration;
 import java.time.LocalDate;

@@ -10,12 +10,12 @@ import ru.yandex.practicum.filmorate.storage.UserStorage;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.util.Collection;
-import java.util.Map;
 
 @Slf4j
 @RestController
 @RequestMapping("/users")
 public class UserController {
+
     private final UserService userService;
     @Qualifier("filmDbStorage")
     private final FilmStorage filmStorage;

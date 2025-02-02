@@ -1,6 +1,5 @@
 package ru.yandex.practicum.filmorate.dal;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -12,6 +11,7 @@ import java.util.Optional;
 
 @Repository
 public class FilmRepository extends BaseRepository<Film> {
+
     private static final String FIND_ALL_QUERY = "SELECT * FROM films";
     private static final String UPDATE_QUERY = "UPDATE films SET name = ?, description = ?, release_date = ?, " +
                                                 "duration = ?, genre_id = ?, mpa_id = ?";
