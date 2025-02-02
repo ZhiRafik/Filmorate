@@ -10,7 +10,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.bind.annotation.RequestBody;
 import ru.yandex.practicum.filmorate.dal.FilmRepository;
 import ru.yandex.practicum.filmorate.dal.GenreRepository;
+import ru.yandex.practicum.filmorate.dal.MPARepository;
 import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.enums.MPA;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -27,7 +29,12 @@ public class FilmDbStorage implements FilmStorage {
 
     private final JdbcTemplate jdbc;
     @Qualifier("filmRowMapper")
-    private final RowMapper<Film> mapper;
+    private final RowMapper<Film> filmMapper;
+    @Qualifier("genreRowMapper")
+    private final RowMapper<Genre> genreMapper;
+    @Qualifier("mpaRowMapper")
+    private final RowMapper<MPA> mpaMapper;
+    private final MPARepository mpaRepository;
     private final FilmRepository filmRepository;
     private final GenreRepository genreRepository;
 
@@ -121,5 +128,15 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Optional<Genre> getGenre(int id) {
         return genreRepository.getGenre(id);
+    }
+
+    @Override
+    public Collection<MPA> getMPAs() {
+        return mpaRepository.getMPAs();
+    }
+
+    @Override
+    public Optional<MPA> getMPA(int id) {
+        return mpaRepository.getMPA(id);
     }
 }

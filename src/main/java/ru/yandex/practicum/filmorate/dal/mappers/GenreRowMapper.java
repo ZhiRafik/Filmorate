@@ -9,6 +9,7 @@ import java.sql.SQLException;
 
 @Component("genreRowMapper")
 public class GenreRowMapper implements RowMapper<Genre> {
+
     @Override
     public Genre mapRow(ResultSet rs, int rowNum) throws SQLException {
         String genreName = rs.getString("name").toUpperCase();

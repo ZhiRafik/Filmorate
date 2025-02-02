@@ -3,6 +3,7 @@ package ru.yandex.practicum;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.UserController;
 import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.enums.MPA;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -32,6 +33,16 @@ class UserTest {
 
         @Override
         public Optional<Genre> getGenre(int id) {
+            return null;
+        }
+
+        @Override
+        public Collection<MPA> getMPAs() {
+            return null;
+        }
+
+        @Override
+        public Optional<MPA> getMPA(int id) {
             return null;
         }
     };

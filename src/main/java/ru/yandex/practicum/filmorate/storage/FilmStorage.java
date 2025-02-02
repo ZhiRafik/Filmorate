@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.enums.MPA;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.util.Collection;
@@ -30,4 +31,8 @@ public interface FilmStorage {
     Collection<Genre> getGenres();
 
     Optional<Genre> getGenre(int id);
+
+    Collection<MPA> getMPAs();
+
+    Optional<MPA> getMPA(int id);
 }

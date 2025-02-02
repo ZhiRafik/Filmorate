@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.web.bind.annotation.*;
 import lombok.extern.slf4j.Slf4j;
 import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.enums.MPA;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.service.FilmService;
 import ru.yandex.practicum.filmorate.model.Film;
@@ -91,4 +92,15 @@ public class FilmController {
         return filmService.getGenre(id).orElse(null);
     }
 
+    @GetMapping("/mpa")
+    public Collection<MPA> getMPAs() {
+        log.info("Получен запрос на получение списка рейтингов");
+        return filmService.getMPAs();
+    }
+
+    @GetMapping("/mpa/{id}")
+    public MPA getMPA(@PathVariable int id) {
+        log.info("Получен запрос на получение рейтинга");
+        return filmService.getMPA(id).orElse(null);
+    }
 }

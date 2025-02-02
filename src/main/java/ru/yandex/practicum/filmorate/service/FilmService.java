@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.enums.MPA;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
@@ -77,5 +78,15 @@ public class FilmService {
     public Optional<Genre> getGenre(int id) {
         log.info("Получен запрос на жанра по id");
         return filmStorage.getGenre(id);
+    }
+
+    public Collection<MPA> getMPAs() {
+        log.info("Получен запрос на получение рейтингов");
+        return filmStorage.getMPAs();
+    }
+
+    public Optional<MPA> getMPA(int id) {
+        log.info("Получен запрос на получение рейтинга по id");
+        return filmStorage.getMPA(id);
     }
 }

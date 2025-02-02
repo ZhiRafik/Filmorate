@@ -3,6 +3,7 @@ package ru.yandex.practicum;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.controller.FilmController;
 import ru.yandex.practicum.filmorate.enums.Genre;
+import ru.yandex.practicum.filmorate.enums.MPA;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
@@ -20,8 +21,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class FilmTest {
 
     private final FilmService filmService = new FilmService();
-    private final FilmStorage filmStorage = new InMemoryFilmStorage() {
-        @Override
+    private final FilmStorage filmStorage = new InMemoryFilmStorage() { // для запуска базовых тестов без БД
+        @Override                                                       // нужно имплементировать методы интерфейса
         public List<Film> getMostPopularFilms(int n) {
             return null;
         }
@@ -33,6 +34,16 @@ class FilmTest {
 
         @Override
         public Optional<Genre> getGenre(int id) {
+            return null;
+        }
+
+        @Override
+        public Collection<MPA> getMPAs() {
+            return null;
+        }
+
+        @Override
+        public Optional<MPA> getMPA(int id) {
             return null;
         }
     };
