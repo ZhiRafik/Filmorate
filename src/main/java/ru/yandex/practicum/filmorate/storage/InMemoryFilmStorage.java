@@ -103,7 +103,11 @@ public abstract class InMemoryFilmStorage implements FilmStorage {
         return false;
     }
 
-    public boolean removeLike(Long userId, Long filmId){ return false; }
+    public boolean removeLike(Long userId, Long filmId){
+        return false;
+    }
 
-    public boolean checkLike(Long userId, Long filmId){ return false; }
+    public boolean checkLike(Long userId, Long filmId){
+        return false;
+    }
 }
