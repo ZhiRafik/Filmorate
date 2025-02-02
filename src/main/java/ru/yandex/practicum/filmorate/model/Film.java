@@ -14,4 +14,6 @@ public class Film {
     LocalDate releaseDate;
     Duration duration;
     Set<Long> likedUsersIds;
+    int genreId;
+    int mpaId;
 }

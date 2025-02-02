@@ -1,71 +1,90 @@
 package ru.yandex.practicum.filmorate.storage;
 
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.RequestBody;
+import ru.yandex.practicum.filmorate.dal.UserRepository;
 import ru.yandex.practicum.filmorate.exception.NotFoundException;
 import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.User;
 
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.regex.Pattern;
 
 @Slf4j
-@Component
-public abstract class InMemoryUserStorage implements UserStorage {
+@Component("userDbStorage")
+@RequiredArgsConstructor
+public class UserDbStorage implements UserStorage {
 
-    private final Map<Long, User> users = new HashMap<>();
+    private final JdbcTemplate jdbc;
+    @Qualifier("userRowMapper")
+    private final RowMapper<User> mapper;
+    private final UserRepository userRepository;
 
     @Override
     public User addUser(@Valid @RequestBody User user) {
         log.info("Получен запрос на добавление пользователя: {}", user);
         user = getValidatedUser(user);
-        user.setId(getNextId());
-        users.put(user.getId(), user);
-        log.info("Пользователь добавлен с ID: {}. Текущее количество пользователей: {}", user.getId(), users.size());
+        user = userRepository.addUser(user);
+        log.info("Пользователь добавлен с ID: {}.", user.getId());
         return user;
     }
 
     @Override
     public User updateUser(@Valid @RequestBody User user) {
         log.info("Получен запрос на обновление пользователя с ID: {}", user.getId());
-        if (!users.containsKey(user.getId())) {
+        if (userRepository.containsUser(user.getId())) {
             log.error("Пользователь с ID {} не найден для обновления", user.getId());
             throw new ValidationException("Пользователь с указанным ID не найден");
         }
         user = getValidatedUser(user);
-        User userBefore = users.get(user.getId());
-        userBefore.setName(user.getName());
-        userBefore.setBirthday(user.getBirthday());
-        userBefore.setLogin(user.getLogin());
-        userBefore.setEmail(user.getEmail());
+        user = userRepository.update(user);
         log.info("Пользователь с ID {} успешно обновлён", user.getId());
-        return userBefore;
+        return user;
     }
 
     @Override
     public User getUser(long userId) {
-        if (users.get(userId) == null) {
+        if (!userRepository.containsUser(userId)) {
             throw new NotFoundException("Пользователь с таким ID не найден");
         }
-        return users.get(userId);
+        return userRepository.findById(userId).orElse(null);
     }
 
     @Override
     public Collection<User> getAll() {
-        return users.values();
+        return userRepository.findAll();
     }
 
     @Override
     public boolean containsUser(User user) {
-        if (users.containsValue(user)) {
-            return true;
-        }
-        return false;
+        return userRepository.containsUser(user.getId());
+    }
+
+    @Override
+    public boolean addFriend(User user1, User user2) {
+        return userRepository.addFriend(user1, user2);
+    }
+
+    @Override
+    public boolean removeFriend(User user1, User user2) {
+        return userRepository.removeFriend(user1, user2);
+    }
+
+    @Override
+    public Collection<Integer> getFriendsIds(User user) {
+        return userRepository.getFriendsIds(user);
+    }
+
+    @Override
+    public Collection<Integer> getCommonFriendsIds(User user1, User user2) {
+        return userRepository.getCommonFriendsIds(user1, user2);
     }
 
     private static User getValidatedUser(User user) {
@@ -93,15 +112,5 @@ public abstract class InMemoryUserStorage implements UserStorage {
     private static boolean isValidEmail(String email) {
         String emailRegex = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$";
         return email != null && !email.isBlank() && Pattern.matches(emailRegex, email);
-    }
-
-    private long getNextId() {
-        long currentMaxId = users.keySet()
-                .stream()
-                .mapToLong(id -> id)
-                .max()
-                .orElse(0);
-        log.debug("Сгенерирован новый ID для пользователя: {}", currentMaxId++);
-        return currentMaxId++;
     }
 }
