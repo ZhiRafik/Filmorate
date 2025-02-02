@@ -17,7 +17,11 @@ public class UserRepository extends BaseRepository<User> {
                                                 "VALUES (?, ?, ?, ?) returning id";
     private static final String UPDATE_QUERY = "UPDATE users SET username = ?, email = ?, password = ? WHERE id = ?";
     private static final String ADD_FRIEND = "INSERT INTO friends_relationship(first_user, second_user, " +
-                                             "friendship_status_id) VALUES (?, ?, ?)";
+                                             "friendship_status_id) VALUES (?, ?, ?) " +
+                                             "ON CONFLICT (first_user, second_user) " +
+                                             "DO UPDATE SET friendship_status_id = 1 " +
+                                             "WHERE friends_relationship.first_user = EXCLUDED.first_user" +
+                                             "AND friends_relationship.second_user = EXCLUDED.second_user";
     private static final String GET_FRIENDSHIP_STATUS_ID = "SELECT friendship_status_id " +
                                                             "FROM friendship_status " +
                                                             "WHERE name = ?";

@@ -47,7 +47,7 @@ CREATE TABLE IF NOT EXISTS friendship_status (
 CREATE TABLE IF NOT EXISTS friends_relationship (
     first_user BIGINT NOT NULL,
     second_user BIGINT NOT NULL,
-    friendship_status_id INTEGER,
+    friendship_status_id INTEGER DEFAULT 2, -- ПО УМОЛЧАНИЮ PENDING (дружба пока не подтверждена)
     PRIMARY KEY (first_user, second_user),
     FOREIGN KEY (friendship_status_id) REFERENCES friendship_status(friendship_status_id)
 );
