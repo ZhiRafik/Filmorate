@@ -1,92 +1,161 @@
 package ru.yandex.practicum.filmorate.service;
 
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.enums.Genre;
-import ru.yandex.practicum.filmorate.enums.MPA;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.dal.CatalogDao;
+import ru.yandex.practicum.filmorate.dal.EventDao;
+import ru.yandex.practicum.filmorate.dal.FilmDao;
+import ru.yandex.practicum.filmorate.dal.UserDao;
+import ru.yandex.practicum.filmorate.mapper.dto.FilmMapper;
+import ru.yandex.practicum.filmorate.model.Director;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.SearchType;
+import ru.yandex.practicum.filmorate.model.dto.FilmDto;
 
-import java.util.Collection;
-import java.util.ArrayList;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
-@Slf4j
+@RequiredArgsConstructor
 @Service
 public class FilmService {
-    @Autowired
-    @Qualifier("filmDbStorage")
-    FilmStorage filmStorage;
-    @Autowired
-    @Qualifier("userDbStorage")
-    UserStorage userStorage;
 
-    public Film likeFilm(User user, Film film) {
-        log.info("Получен запрос на добавление лайка: userId={}, filmId={}", user.getId(), film.getId());
-        checkIfUserAndFilmExist(user, film);
-        filmStorage.addLike(user.getId(), film.getId());
-        if (filmStorage.checkLike(user.getId(), film.getId())) {
-            log.info("Лайк добавлен: userId={}, filmId={}", user.getId(), film.getId());
+    private final FilmDao filmDao;
+    private final UserDao userDao;
+    private final CatalogDao catalogDao;
+    private final EventDao eventDao;
+
+    public FilmDto addFilm(FilmDto dto) {
+        Film film = FilmMapper.mapToModel(dto);
+        checkCatalogsExistOrThrow(film);
+        Long id = filmDao.insert(film);
+        dto.setId(id);
+        return dto;
+    }
+
+    public FilmDto updateFilm(FilmDto dto) {
+        Film newFilm = FilmMapper.mapToModel(dto);
+        checkCatalogsExistOrThrow(newFilm);
+        filmDao.checkFilmExistOrThrow(newFilm.getId());
+        Film oldFilm = filmDao.getFilm(newFilm.getId());
+        Film result = update(oldFilm, newFilm);
+        filmDao.update(result);
+        return FilmMapper.mapToDto(result);
+    }
+
+    public Collection<FilmDto> getFilms() {
+        return filmDao.getFilms().stream()
+                .map(FilmMapper::mapToDto)
+                .collect(Collectors.toList());
+    }
+
+    public FilmDto getFilm(long filmId) {
+        filmDao.checkFilmExistOrThrow(filmId);
+        Film film = filmDao.getFilm(filmId);
+        return FilmMapper.mapToDto(film);
+    }
+
+    public Map<String, String> deleteFilm(long filmId) {
+        filmDao.checkFilmExistOrThrow(filmId);
+        filmDao.delete(filmId);
+        return Map.of("description", String.format("Фильм с идентификатором: %d успешно удален.", filmId));
+    }
+
+    public void like(long filmId, long userId) {
+        userDao.checkUserExistsOrThrow(userId);
+        filmDao.checkFilmExistOrThrow(filmId);
+        filmDao.removeLike(filmId, userId);
+        filmDao.addLike(filmId, userId);
+        eventDao.insert(userId, "LIKE", "ADD", filmId);
+    }
+
+    public void removeLike(long filmId, long userId) {
+        userDao.checkUserExistsOrThrow(userId);
+        filmDao.checkFilmExistOrThrow(filmId);
+        filmDao.removeLike(filmId, userId);
+        eventDao.insert(userId, "LIKE", "REMOVE", filmId);
+    }
+
+    public Collection<FilmDto> findPopularFilms(Long count, Long genreId, Long year) {
+        Collection<Film> films;
+        if (genreId == null && year == null) {
+            films = filmDao.findPopularFilms(count);
+        } else if (genreId != null && year == null) {
+            catalogDao.checkGenresExistOrThrow(List.of(genreId));
+            films = filmDao.findPopularFilmsWithoutYear(count, genreId);
+        } else if (genreId == null) {
+            films = filmDao.findPopularFilmsWithoutGenre(count, year);
         } else {
-            log.warn("Лайк НЕ добавлен: userId={}, filmId={}", user.getId(), film.getId());
+            catalogDao.checkGenresExistOrThrow(List.of(genreId));
+            films = filmDao.findPopularFilms(count, genreId, year);
         }
-        return film;
+        return FilmMapper.mapToDto(films);
     }
 
-    public Film removeLikeFromFilm(User user, Film film) {
-        log.info("Получен запрос на удаление лайка: userId={}, filmId={}", user.getId(), film.getId());
-        if (filmStorage.checkLike(user.getId(), film.getId())) {
-            log.error("Ошибка: Пользователь с id={} не ставил лайк на фильм с id={}", user.getId(), film.getId());
-            throw new NotFoundException("Пользователь не ставил лайк на этот фильм");
+    public List<FilmDto> findFilmWithDirectors(long directorId, String type) {
+        catalogDao.checkDirectorExistOrThrow(directorId);
+        Collection<Film> films;
+        if (type.equals("likes")) {
+            films = filmDao.findFilmWithDirectorsOnLikes(directorId);
+        } else if (type.equals("year")) {
+            films = filmDao.findFilmWithDirectorsOnYear(directorId);
+        } else {
+            films = List.of();
         }
-        filmStorage.removeLike(user.getId(), film.getId());
-        log.info("Лайк удалён. userId={} убрал лайк с фильма filmId={}", user.getId(), film.getId());
-        return film;
+        return FilmMapper.mapToDto(films);
     }
 
-    public Collection<Film> getPopularFilms(int count) {
-        log.info("Получен запрос на получение {} популярных фильмов", count);
-        ArrayList<Film> films = new ArrayList<>(filmStorage.getAll());
-        films = (ArrayList<Film>) filmStorage.getMostPopularFilms(count);
-        log.info("Фильмы отсортированы по количеству лайков. Общее количество фильмов: {}", films.size());
-        return films;
-    }
-
-    private void checkIfUserAndFilmExist(User user, Film film) {
-        log.debug("Проверка существования фильма с id={} и пользователя с id={}", film.getId(), user.getId());
-        if (!filmStorage.containsFilm(film)) {
-            log.error("Фильм с id={} не найден", film.getId());
-            throw new NotFoundException("Указанный фильм не найден: " + film.toString());
+    public Collection<FilmDto> searchFilms(String query, List<String> by) {
+        Collection<SearchType> types = by.stream().map(SearchType::fromValue).toList();
+        List<Film> result = new ArrayList<>();
+        for (SearchType type : types) {
+            switch (type) {
+                case DIRECTOR -> result.addAll(filmDao.findFilmsByDirector(query));
+                case TITLE -> result.addAll(filmDao.findFilmsByTitle(query));
+                default -> throw new IllegalArgumentException("Указан неподдерживаемый параметр: " + type.getValue());
+            }
         }
-        if (!userStorage.containsUser(user)) {
-            log.error("Пользователь с id={} не найден", user.getId());
-            throw new NotFoundException("Указанный пользователь не найден: " + user.toString());
+
+        return FilmMapper.mapToDto(result.stream()
+                .sorted(Comparator.comparing(Film::getId).reversed())
+                .collect(Collectors.toList()));
+    }
+
+    private List<Film> sortFilmsOnGetId(List<Film> films) {
+        return films.stream().sorted(Comparator.comparing(Film::getId)).collect(Collectors.toList());
+    }
+
+    public Collection<FilmDto> searchCommonFilms(Long userId, Long friendId) {
+        userDao.checkUserExistsOrThrow(userId);
+        userDao.checkUserExistsOrThrow(friendId);
+        Collection<Film> films = filmDao.findCommonFilms(userId, friendId);
+        return FilmMapper.mapToDto(films);
+    }
+
+    private void checkCatalogsExistOrThrow(Film film) {
+        List<Long> genreIds = film.getGenres().stream()
+                .map(Genre::getId)
+                .toList();
+        catalogDao.checkGenresExistOrThrow(genreIds);
+        catalogDao.checkMpaExistOrThrow(film.getMpa().getId());
+        Director director = film.getDirector();
+        if (director != null) {
+            catalogDao.checkDirectorExistOrThrow(director.getId());
         }
-        log.debug("Проверка завершена: фильм и пользователь существуют");
     }
 
-    public Collection<Genre> getGenres() {
-        log.info("Получен запрос на получение всех жанров");
-        return filmStorage.getGenres();
-    }
-
-    public Optional<Genre> getGenre(int id) {
-        log.info("Получен запрос на жанра по id");
-        return filmStorage.getGenre(id);
-    }
-
-    public Collection<MPA> getMPAs() {
-        log.info("Получен запрос на получение рейтингов");
-        return filmStorage.getMPAs();
-    }
-
-    public Optional<MPA> getMPA(int id) {
-        log.info("Получен запрос на получение рейтинга по id");
-        return filmStorage.getMPA(id);
+    private Film update(Film originalFilm, Film newFilm) {
+        return Film.builder()
+                .id(newFilm.getId())
+                .name(newFilm.getName() == null ? originalFilm.getName() : newFilm.getName())
+                .description(newFilm.getDescription() == null ? originalFilm.getDescription() : newFilm.getDescription())
+                .duration(newFilm.getDuration() == null ? originalFilm.getDuration() : newFilm.getDuration())
+                .releaseDate(newFilm.getReleaseDate() == null ? originalFilm.getReleaseDate() : newFilm.getReleaseDate())
+                .likeCount(originalFilm.getLikeCount())
+                .mpa(newFilm.getMpa())
+                .genres(newFilm.getGenres().stream().sorted(Comparator.comparing(Genre::getId)).toList())
+                // .director(newFilm.getDirector() == null ? originalFilm.getDirector() : newFilm.getDirector())
+                .director(newFilm.getDirector())
+                .build();
     }
 }

@@ -1,81 +1,88 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
+import ru.yandex.practicum.filmorate.model.Event;
+import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.validation.group.ValidationGroup;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
-@Slf4j
+@RequiredArgsConstructor
+@Validated
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
-    private final UserService userService;
-    @Qualifier("filmDbStorage")
-    private final FilmStorage filmStorage;
-    @Qualifier("userDbStorage")
-    private final UserStorage userStorage;
-
-    @Autowired
-    public UserController(UserService userService, FilmStorage filmStorage, UserStorage userStorage) {
-        this.userService = userService;
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
+    private final UserService service;
 
     @PostMapping
-    public User addUser(@RequestBody User user) {
-        log.info("Получен запрос на добавление пользователя: {}", user);
-        return userStorage.addUser(user);
+    @Validated(ValidationGroup.OnCreate.class)
+    public User createUser(@Valid @RequestBody User user) {
+        return service.createUser(user);
     }
 
     @PutMapping
-    public User updateUser(@RequestBody User user) {
-        log.info("Получен запрос на обновление пользователя: {}", user);
-        return userStorage.updateUser(user);
-    }
-
-    @PostMapping("/{userId}/friends/{friendId}")
-    public boolean addFriend(@PathVariable Long userId, @PathVariable Long friendId) {
-        log.info("Получен запрос на добавление друга: userId={}, friendId={}", userId, friendId);
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        return userService.addFriend(user, friend);
-    }
-
-    @DeleteMapping("/{userId}/friends/{friendId}")
-    public boolean removeFriend(@PathVariable Long userId, @PathVariable Long friendId) {
-        log.info("Получен запрос на удаление друга: userId={}, friendId={}", userId, friendId);
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        return userService.removeFriend(user, friend);
+    @Validated(ValidationGroup.OnUpdate.class)
+    public User updateUser(@Valid @RequestBody User user) {
+        return service.updateUser(user);
     }
 
     @GetMapping
-    public Collection<User> getAll() {
-        log.info("Получен запрос на получения списка всех пользователей");
-        return userService.getAll();
+    public Collection<User> getUsers() {
+        return service.getUsers();
     }
 
-    @GetMapping("/{userId}/friends")
-    public Collection<User> getFriends(@PathVariable Long userId) {
-        log.info("Получен запрос на получение списка друзей пользователя: userId={}", userId);
-        User user = userStorage.getUser(userId);
-        return userService.getFriends(user);
+    @DeleteMapping("/{id}")
+    public Map<String, String> delete(@PathVariable long id) {
+        return service.deleteUser(id);
     }
 
-    @GetMapping("/{userId}/friends/common/{friendId}")
-    public Collection<User> getMutualFriends(@PathVariable Long userId, @PathVariable Long friendId) {
-        log.info("Получен запрос на получение общих друзей: userId={}, friendId={}", userId, friendId);
-        User user = userStorage.getUser(userId);
-        User friend = userStorage.getUser(friendId);
-        return userService.getCommonFriends(user, friend);
+    @GetMapping("/{id}")
+    public User getUser(@PathVariable long id) {
+        return service.getUser(id);
     }
 
+    @PutMapping("/{user-id}/friends/{friend-id}")
+    public void addFriend(@PathVariable(name = "user-id") long userId, @PathVariable(name = "friend-id") long friendId) {
+        service.addFriend(userId, friendId);
+    }
+
+    @DeleteMapping("/{user-id}/friends/{friend-id}")
+    public void removeFriend(@PathVariable(name = "user-id") long userId, @PathVariable(name = "friend-id") long friendId) {
+        service.removeFriend(userId, friendId);
+    }
+
+    @GetMapping("/{user-id}/friends")
+    public Set<User> getFriends(@PathVariable(name = "user-id") long userId) {
+        return service.getFriends(userId);
+    }
+
+    @GetMapping("/{user-id}/friends/common/{other-user-id}")
+    public Set<User> getCommonFriends(@PathVariable(name = "user-id") long userId,
+                                      @PathVariable(name = "other-user-id") long otherUserId) {
+        return service.getCommonFriends(userId, otherUserId);
+    }
+
+    @GetMapping("/{id}/recommendations")
+    public Collection<Film> getRecommendations(@PathVariable(name = "id") long userId) {
+        return service.getRecommendations(userId);
+    }
+
+    @GetMapping("/{id}/likes")
+    public Collection<Long> getLikes(@PathVariable(name = "id") long userId) {
+        return service.getLikeFilms(userId);
+    }
+
+    @GetMapping("/{id}/feed")
+    public List<Event> getEvent(@PathVariable long id) {
+        return service.getEvents(id);
+    }
 }

@@ -1,19 +1,33 @@
 package ru.yandex.practicum.filmorate.model;
 
+import lombok.AccessLevel;
+import lombok.Builder;
 import lombok.Data;
+import lombok.experimental.FieldDefaults;
 
-import java.time.Duration;
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.Collection;
 
 @Data
+@Builder
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class Film {
-    long id;
+
+    Long id;
+
     String name;
+
     String description;
+
     LocalDate releaseDate;
-    Duration duration;
-    Set<Long> likedUsersIds;
-    int genreId;
-    int mpaId;
+
+    Long duration;
+
+    Mpa mpa;
+
+    Collection<Genre> genres; // genre ids
+
+    int likeCount;
+
+    Director director;
 }

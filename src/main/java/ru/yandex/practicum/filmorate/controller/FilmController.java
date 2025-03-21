@@ -1,106 +1,86 @@
 package ru.yandex.practicum.filmorate.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-import lombok.extern.slf4j.Slf4j;
-import ru.yandex.practicum.filmorate.enums.Genre;
-import ru.yandex.practicum.filmorate.enums.MPA;
-import ru.yandex.practicum.filmorate.exception.NotFoundException;
+import ru.yandex.practicum.filmorate.model.dto.FilmDto;
 import ru.yandex.practicum.filmorate.service.FilmService;
-import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.storage.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.UserStorage;
-import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.validation.group.ValidationGroup;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
 
-
-@Slf4j
+@RequiredArgsConstructor
+@Validated
 @RestController
 @RequestMapping("/films")
 public class FilmController {
 
-    private final FilmService filmService;
-    @Qualifier("filmDbStorage")
-    private final FilmStorage filmStorage;
-    @Qualifier("userDbStorage")
-    private final UserStorage userStorage;
-
-    @Autowired
-    public FilmController(FilmService filmService, FilmStorage filmStorage, UserStorage userStorage) {
-        this.filmService = filmService;
-        this.filmStorage = filmStorage;
-        this.userStorage = userStorage;
-    }
+    private final FilmService service;
 
     @PostMapping
-    public Film addFilm(@RequestBody Film film) {
-        log.info("Получен запрос на добавление фильма: {}", film);
-        return filmStorage.addFilm(film);
+    @Validated(ValidationGroup.OnCreate.class)
+    public FilmDto addFilm(@Valid @RequestBody FilmDto dto) {
+        return service.addFilm(dto);
     }
 
     @PutMapping
-    public Film updateFilm(@RequestBody Film film) {
-        log.info("Получен запрос на обновление фильма: {}", film);
-        return filmStorage.updateFilm(film);
+    @Validated(ValidationGroup.OnUpdate.class)
+    public FilmDto updateFilm(@Valid @RequestBody FilmDto dto) {
+        return service.updateFilm(dto);
     }
 
     @GetMapping
-    public Collection<Film> getAll() {
-        log.info("Получен запрос на получение фильмов");
-        return filmStorage.getAll();
+    public Collection<FilmDto> getFilms() {
+        return service.getFilms();
     }
 
-    @PostMapping("/{filmId}/like/{userId}")
-    public Film likeFilm(@PathVariable Long filmId, @PathVariable Long userId) {
-        log.info("Получен запрос на добавление лайка: filmId={}, userId={}", userId, filmId);
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId).orElse(null);
-        if (film == null) {
-            throw new NotFoundException("Фильм с id " + filmId + " не найден");
-        }
-        return filmService.likeFilm(user, film);
+    @GetMapping("/{film-id}")
+    public FilmDto getFilm(@PathVariable(name = "film-id") long filmId) {
+        return service.getFilm(filmId);
     }
 
-    @DeleteMapping("{filmId}/like/{userId}")
-    public Film removeLikeFromFilm(@PathVariable Long filmId, @PathVariable Long userId) {
-        log.info("Получен запрос на удаление лайка: filmId={}, userId={}", userId, filmId);
-        User user = userStorage.getUser(userId);
-        Film film = filmStorage.getFilm(filmId).orElse(null);
-        if (film == null) {
-            throw new NotFoundException("Фильм с id " + filmId + " не найден");
-        }
-        return filmService.removeLikeFromFilm(user, film);
+    @PutMapping("/{film-id}/like/{user-id}")
+    public void like(@PathVariable(name = "film-id") long filmId, @PathVariable(name = "user-id") long userId) {
+        service.like(filmId, userId);
     }
 
-    @GetMapping("/popular?count={count}")
-    public Collection<Film> getMostPopularFilms(@PathVariable(required = false) int count) {
-        log.info("Получен запрос на получение популярных фильмов. Количество: {}", count);
-        return filmService.getPopularFilms(count);
+    @DeleteMapping("/{film-id}/like/{user-id}")
+    public void removeLike(@PathVariable(name = "film-id") long filmId, @PathVariable(name = "user-id") long userId) {
+        service.removeLike(filmId, userId);
     }
 
-    @GetMapping("/genres")
-    public Collection<Genre> getGenres() {
-        log.info("Получен запрос на получение списка жанров");
-        return filmService.getGenres();
+    @DeleteMapping("/{id}")
+    public Map<String, String> deleteFilm(@PathVariable long id) {
+        return service.deleteFilm(id);
     }
 
-    @GetMapping("/genres/{id}")
-    public Genre getGenre(@PathVariable int id) {
-        log.info("Получен запрос на получение жанра");
-        return filmService.getGenre(id).orElse(null);
+    @GetMapping("/popular")
+    public Collection<FilmDto> findPopularFilms(
+            @RequestParam(defaultValue = "10") Long count,
+            @RequestParam(required = false) Long genreId,
+            @RequestParam(required = false) Long year
+    ) {
+        return service.findPopularFilms(count, genreId, year);
     }
 
-    @GetMapping("/mpa")
-    public Collection<MPA> getMPAs() {
-        log.info("Получен запрос на получение списка рейтингов");
-        return filmService.getMPAs();
+    @GetMapping("/director/{director-id}")
+    public List<FilmDto> findFilmWithDirectorsOnLikes(
+            @PathVariable(value = "director-id") Long directorId,
+            @RequestParam String sortBy
+    ) {
+        return service.findFilmWithDirectors(directorId, sortBy);
     }
 
-    @GetMapping("/mpa/{id}")
-    public MPA getMPA(@PathVariable int id) {
-        log.info("Получен запрос на получение рейтинга");
-        return filmService.getMPA(id).orElse(null);
+    @GetMapping("/search")
+    public Collection<FilmDto> searchFilms(@RequestParam String query, @RequestParam List<String> by) {
+        return service.searchFilms(query, by);
+    }
+
+    @GetMapping("/common")
+    public Collection<FilmDto> searchCommonFilms(@RequestParam Long userId, @RequestParam Long friendId) {
+        return service.searchCommonFilms(userId, friendId);
     }
 }
