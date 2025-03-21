@@ -9,13 +9,12 @@ import ru.yandex.practicum.filmorate.exception.ValidationException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
-public class InMemoryFilmStorage implements FilmStorage {
+public abstract class InMemoryFilmStorage implements FilmStorage {
+
     private final Map<Long, Film> films = new HashMap<>();
 
     @Override
@@ -60,12 +59,12 @@ public class InMemoryFilmStorage implements FilmStorage {
     }
 
     @Override
-    public Film getFilm(Long filmId) {
+    public Optional<Film> getFilm(Long filmId) {
         Film film = films.get(filmId);
         if (film == null) {
             throw new NotFoundException("Фильм с id " + filmId + " не найден");
         }
-        return film;
+        return Optional.of(film);
     }
 
     private Film getValidatedFilm(Film film) {
@@ -98,5 +97,17 @@ public class InMemoryFilmStorage implements FilmStorage {
                 .orElse(0);
         log.debug("Сгенерирован новый ID для фильма: {}", currentMaxId++);
         return currentMaxId++;
+    }
+
+    public boolean addLike(Long userId, Long filmId) {
+        return false;
+    }
+
+    public boolean removeLike(Long userId, Long filmId) {
+        return false;
+    }
+
+    public boolean checkLike(Long userId, Long filmId) {
+        return false;
     }
 }

@@ -16,7 +16,8 @@ import java.util.regex.Pattern;
 
 @Slf4j
 @Component
-public class InMemoryUserStorage implements UserStorage {
+public abstract class InMemoryUserStorage implements UserStorage {
+
     private final Map<Long, User> users = new HashMap<>();
 
     @Override
